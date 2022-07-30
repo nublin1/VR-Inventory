@@ -33,10 +33,7 @@ public class CanvasPointer : MonoBehaviour
         if (lineRenderer == null)
             gameObject.TryGetComponent<LineRenderer>(out lineRenderer);
         if (xRRayInteractor == null)
-            gameObject.TryGetComponent<XRRayInteractor>(out xRRayInteractor);
-
-        //StartPoint.AddListener(StartHoveringUI);
-        //StopPoint.AddListener(StopHoveringUI);
+            gameObject.TryGetComponent<XRRayInteractor>(out xRRayInteractor);        
     }
 
 

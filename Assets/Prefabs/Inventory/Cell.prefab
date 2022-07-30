@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6586336516994046383}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: Cell3D
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -91,7 +91,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -234,9 +234,9 @@ GameObject:
   - component: {fileID: 7296010562226163588}
   - component: {fileID: 348952063918476408}
   - component: {fileID: 8332231746063072133}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: CellFrame
-  m_TagString: Untagged
+  m_TagString: Inventory
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -436,6 +436,14 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 8e2bf44d098a6254c93b11c243f4471b, type: 3}
       propertyPath: m_Name
       value: Visual
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 8e2bf44d098a6254c93b11c243f4471b, type: 3}
+      propertyPath: m_Layer
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8164078558771037576, guid: 8e2bf44d098a6254c93b11c243f4471b, type: 3}
+      propertyPath: m_Layer
+      value: 2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 8e2bf44d098a6254c93b11c243f4471b, type: 3}

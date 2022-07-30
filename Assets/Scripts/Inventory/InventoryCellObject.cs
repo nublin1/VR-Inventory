@@ -15,7 +15,7 @@ namespace Inventory
 
         private GameObject visual;
 
-        private List<Shader> originalShaders = new List<Shader>();
+        private readonly List<Shader> originalShaders = new List<Shader>();
         private Vector3 originalScale = Vector3.zero;
 
         public GridXY Grid { get => _grid; }
@@ -56,11 +56,12 @@ namespace Inventory
 
             InventoryUtilities.SameSize(visual, _grid.CellLossyScale);
            
-            Renderer[] renderers = visual.gameObject.GetComponentsInChildren<Renderer>();
+            Renderer[] renderers = visual.GetComponentsInChildren<Renderer>();
             foreach (Renderer renderer in renderers)
             {
                 originalShaders.Add(renderer.material.shader);
-                renderer.material.shader = _grid.CellGhostVisibleShader;
+                renderer.material.shader = _grid.ItemInCellShader;
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 Color color = renderer.material.color;
                 renderer.material.color = new Color(color.r, color.g, color.b, .65f);
                 renderer.material.renderQueue = _grid.CellGhostVisibleShader.renderQueue - 2;
@@ -69,7 +70,7 @@ namespace Inventory
             visual.GetComponent<Rigidbody>().isKinematic = true;
             visual.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
 
-            Collider[] colliders = visual.gameObject.GetComponentsInChildren<Collider>();
+            Collider[] colliders = visual.GetComponentsInChildren<Collider>();
             foreach (Collider collider in colliders)
             {
                 collider.enabled = false;
@@ -81,7 +82,7 @@ namespace Inventory
         }
         public Transform GetVisual()
         {
-            Renderer[] renderers = visual.gameObject.GetComponentsInChildren<Renderer>();
+            Renderer[] renderers = visual.GetComponentsInChildren<Renderer>();
             int i= 0;
             foreach (Renderer renderer in renderers)
             {
@@ -94,7 +95,7 @@ namespace Inventory
 
             visual.GetComponent<Rigidbody>().isKinematic = false;
             visual.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-            Collider[] colliders = visual.gameObject.GetComponentsInChildren<Collider>();
+            Collider[] colliders = visual.GetComponentsInChildren<Collider>();
             foreach (Collider collider in colliders)
             {
                 collider.enabled = true;
@@ -112,7 +113,7 @@ namespace Inventory
             frameText.gameObject.SetActive(false);
         }
 
-        public bool isCellEmpty()
+        public bool IsCellEmpty()
         {
             if (visual == null)
                 return true;

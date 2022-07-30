@@ -43,12 +43,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c59408a7b787224d818b0516c529fed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gridWidth: 3
-  gridHeight: 4
+  gridWidth: 6
+  gridHeight: 6
   cellSize: 110
   panelHeight: 4
   openAction: {fileID: -8183502602375495445, guid: 8b9c6eb28d52a49468291baa8c4d0e5a, type: 3}
-  cellGhostVisibleShader: {fileID: 4800000, guid: 9a11bb085bab7144a8fc6f3e961a891f, type: 3}
-  itemInCellShader: {fileID: 4800000, guid: ca4c890fd888f3c42a31dc86335a2c1b, type: 3}
+  startingItems: []
   panelPefab: {fileID: 7976263734335451368, guid: 982cde358dbb6ff40a7e0f054d4fd2b0, type: 3}
   cellPrefab: {fileID: 2085213761987462213, guid: 1fd9280e4ca75fd439ec40a2cc12ed26, type: 3}
+  setupShaders: 1
+  cellGhostVisibleShader: {fileID: 4800000, guid: 9a11bb085bab7144a8fc6f3e961a891f, type: 3}
+  itemInCellShader: {fileID: 4800000, guid: 713e896abe8097b49b2044c1ab8761a8, type: 3}

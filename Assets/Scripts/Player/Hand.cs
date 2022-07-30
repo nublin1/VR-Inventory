@@ -4,7 +4,7 @@ using UnityEngine.XR.Interaction.Toolkit;
 namespace Input
 {
     public class Hand : MonoBehaviour
-    {        
+    {
         [Header("References")]
         [SerializeField] ActionBasedController controller;
         [SerializeField] XRRayInteractor xRRayInteractor;
@@ -36,11 +36,13 @@ namespace Input
 
         private void Update()
         {
-            updateObjectsInHand();
+            UpdateObjectsInHand();
+
+            xRRayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit raycastHit);
             
         }
 
-        public void updateObjectsInHand()
+        public void UpdateObjectsInHand()
         {
             if (xRRayInteractor.firstInteractableSelected != null)
             {

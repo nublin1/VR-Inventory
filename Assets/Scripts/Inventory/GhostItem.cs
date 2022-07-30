@@ -6,14 +6,14 @@ namespace Inventory
     public class GhostItem : MonoBehaviour
     {
         struct ItemData
-        {            
+        {
             public Transform ghostVisual;
             public Transform ghostItemOnCell;
             public InventoryCellObject cellObject;
             public bool showGhostItem;
         }
 
-        List<ItemData> ghostItems = new List<ItemData>();
+        readonly List<ItemData> ghostItems = new List<ItemData>();
 
         private GridXY grid;
 
@@ -42,19 +42,22 @@ namespace Inventory
 
 
         private void RenderGhostItem(object sender, OnInventoryCellIntersectedEventArgs e)
-        {            
-                ItemData newData = new ItemData();
-               
-                newData.showGhostItem = true;
-                newData.cellObject = e.cellObject;
-                newData.ghostItemOnCell = e.ghostObject;
+        {
 
-                ghostItems.Add(newData);           
+            ItemData newData = new ItemData
+            {
+                showGhostItem = true,
+                cellObject = e.cellObject,
+                ghostItemOnCell = e.ghostObject
+            };
+
+            ghostItems.Add(newData);
+
         }
 
         private ItemData UpdateVisual(ItemData data)
         {
-            if (data.ghostVisual == null)
+            if (data.ghostVisual == null && data.cellObject.IsCellEmpty())
             {
 
                 data.ghostVisual = Instantiate(data.ghostItemOnCell);
@@ -68,6 +71,7 @@ namespace Inventory
                 foreach (Renderer renderer in renderers)
                 {
                     renderer.material.shader = grid.CellGhostVisibleShader;
+                    renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                     Color color = renderer.material.color;
                     renderer.material.color = new Color(color.r, color.g, color.b, .65f);
                     renderer.material.renderQueue = grid.CellGhostVisibleShader.renderQueue - 2;
@@ -82,7 +86,7 @@ namespace Inventory
                     collider.enabled = false;
                 }
 
-                if ( !data.ghostVisual.Equals(data.ghostItemOnCell))
+                if (!data.ghostVisual.Equals(data.ghostItemOnCell))
                     data.showGhostItem = false;
             }
 
