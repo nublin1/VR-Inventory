@@ -1,4 +1,4 @@
-Shader "Stencil / StencilStandartRead"
+Shader "Stencil / StencilRead_Standart"
 {
     Properties
     {

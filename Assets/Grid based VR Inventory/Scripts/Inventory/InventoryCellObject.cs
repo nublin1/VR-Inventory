@@ -13,7 +13,7 @@ namespace Inventory
         private Transform frameText;
         private Transform borderImage;
 
-        private GameObject visual;
+        private GameObject item;
 
         private readonly List<Shader> originalShaders = new List<Shader>();
         private Vector3 originalScale = Vector3.zero;
@@ -45,18 +45,18 @@ namespace Inventory
             borderImage.gameObject.SetActive(false);
         }
 
-        public void PlaceVisual(Transform _visual)
+        public void PlaceItem(Transform _visual)
         {
-            visual = _visual.gameObject;
-            originalScale = visual.transform.lossyScale;
+            item = _visual.gameObject;
+            originalScale = item.transform.lossyScale;
 
-            visual.transform.SetParent(spawnPoint.transform);
-            visual.transform.position = spawnPoint.position;
-            visual.transform.localRotation = Quaternion.Euler(SpawnPoint.rotation.x, 90f, SpawnPoint.rotation.z);
+            item.transform.SetParent(spawnPoint.transform);
+            item.transform.position = spawnPoint.position;
+            item.transform.localRotation = Quaternion.Euler(SpawnPoint.rotation.x, 90f, SpawnPoint.rotation.z);
 
-            InventoryUtilities.SameSize(visual, _grid.CellLossyScale);
-           
-            Renderer[] renderers = visual.GetComponentsInChildren<Renderer>();
+            InventoryUtilities.SameSize(item, _grid.CellLossyScale); // same with cell size           
+            
+            Renderer[] renderers = item.GetComponentsInChildren<Renderer>();
             foreach (Renderer renderer in renderers)
             {
                 originalShaders.Add(renderer.material.shader);
@@ -67,23 +67,23 @@ namespace Inventory
                 renderer.material.renderQueue = _grid.CellGhostVisibleShader.renderQueue - 2;
             }
 
-            visual.GetComponent<Rigidbody>().isKinematic = true;
-            visual.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+            item.GetComponent<Rigidbody>().isKinematic = true;
+            item.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
 
-            Collider[] colliders = visual.GetComponentsInChildren<Collider>();
+            Collider[] colliders = item.GetComponentsInChildren<Collider>();
             foreach (Collider collider in colliders)
             {
                 collider.enabled = false;
             }
 
             // set Text
-            frameText.GetComponent<Text>().text = visual.name;           
+            frameText.GetComponent<Text>().text = item.name;           
             frameText.GetComponent<Text>().fontSize = 12 + Mathf.RoundToInt(_grid.CellSize / 11); 
             frameText.gameObject.SetActive(true);
         }
-        public Transform GetVisual()
+        public Transform GetItem()
         {
-            Renderer[] renderers = visual.GetComponentsInChildren<Renderer>();
+            Renderer[] renderers = item.GetComponentsInChildren<Renderer>();
             int i= 0;
             foreach (Renderer renderer in renderers)
             {
@@ -91,24 +91,25 @@ namespace Inventory
                 i++;
             }               
 
-            visual.transform.parent = null;
-            visual.transform.localScale = originalScale;
+            item.transform.parent = null;
+            item.transform.localScale = originalScale;
 
-            visual.GetComponent<Rigidbody>().isKinematic = false;
-            visual.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-            Collider[] colliders = visual.GetComponentsInChildren<Collider>();
+            item.GetComponent<Rigidbody>().isKinematic = false;
+            item.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+
+            Collider[] colliders = item.GetComponentsInChildren<Collider>();
             foreach (Collider collider in colliders)
             {
                 collider.enabled = true;
             }
 
-            return visual.transform;
+            return item.transform;
         }
 
         public void ClearCell()
         {
-            if (visual != null)
-                visual = null;
+            if (item != null)
+                item = null;
 
             frameText.GetComponent<Text>().text = "";
             frameText.gameObject.SetActive(false);
@@ -116,7 +117,7 @@ namespace Inventory
 
         public bool IsCellEmpty()
         {
-            if (visual == null)
+            if (item == null)
                 return true;
             else
                 return false;
