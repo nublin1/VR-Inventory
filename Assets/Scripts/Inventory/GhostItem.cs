@@ -19,12 +19,29 @@ namespace Inventory
 
         public GridXY Grid { set => grid = value; }
 
-        void Start()
+        private void Start()
         {
             grid.OnInventoryCellIntersected += RenderGhostItem;
+            grid.OnStopInventoryCellIntersected += StopRenderGhostItem;
         }
 
-        void Update()
+        private void OnEnable()
+        {
+            if (grid == null)
+                return;
+            grid.OnInventoryCellIntersected += RenderGhostItem;
+            grid.OnStopInventoryCellIntersected += StopRenderGhostItem;
+        }
+
+        private void OnDisable()
+        {
+            if (grid == null)
+                return;
+            grid.OnInventoryCellIntersected -= RenderGhostItem;
+            grid.OnStopInventoryCellIntersected -= StopRenderGhostItem;
+        }
+
+        void LateUpdate()
         {
             for (int i = 0; i < ghostItems.Count; ++i)
             {
@@ -40,10 +57,8 @@ namespace Inventory
             }
         }
 
-
         private void RenderGhostItem(object sender, OnInventoryCellIntersectedEventArgs e)
         {
-
             ItemData newData = new ItemData
             {
                 showGhostItem = true,
@@ -52,14 +67,25 @@ namespace Inventory
             };
 
             ghostItems.Add(newData);
+        }
 
+        private void StopRenderGhostItem(object sender, OnInventoryCellIntersectedEventArgs e)
+        {
+            for (int i = 0; i < ghostItems.Count; ++i)
+            {
+                if (ghostItems[i].cellObject == e.cellObject)
+                {
+                    ItemData newData = ghostItems[i];
+                    newData.showGhostItem = false;
+                    ghostItems[i] = newData;
+                }
+            }
         }
 
         private ItemData UpdateVisual(ItemData data)
         {
-            if (data.ghostVisual == null && data.cellObject.IsCellEmpty())
+            if (data.ghostVisual == null && data.cellObject.SpawnPoint.childCount == 0 && data.cellObject.IsCellEmpty())
             {
-
                 data.ghostVisual = Instantiate(data.ghostItemOnCell);
                 data.ghostVisual.transform.SetParent(data.cellObject.SpawnPoint);
                 data.ghostVisual.transform.position = data.cellObject.SpawnPoint.position;
@@ -85,18 +111,17 @@ namespace Inventory
                 {
                     collider.enabled = false;
                 }
-
-                if (!data.ghostVisual.Equals(data.ghostItemOnCell))
-                    data.showGhostItem = false;
             }
+            else if (data.cellObject.IsCellEmpty() == false)
+                data.showGhostItem = false;
 
             return data;
         }
 
         private void DestroyVisual(ItemData data)
         {
-            GameObject.Destroy(data.ghostVisual.gameObject);
+            if (data.ghostVisual != null)
+                GameObject.Destroy(data.ghostVisual.gameObject);
         }
-
     }
 }

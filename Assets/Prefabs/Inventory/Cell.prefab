@@ -179,7 +179,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 40}
-  m_SizeDelta: {x: 160, y: 30}
+  m_SizeDelta: {x: 160, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &812158518466360816
 CanvasRenderer:
@@ -234,7 +234,7 @@ GameObject:
   - component: {fileID: 7296010562226163588}
   - component: {fileID: 348952063918476408}
   - component: {fileID: 8332231746063072133}
-  m_Layer: 2
+  m_Layer: 5
   m_Name: CellFrame
   m_TagString: Inventory
   m_Icon: {fileID: 0}
@@ -267,7 +267,7 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3259455891725334935}
-  m_CullTransparentMesh: 1
+  m_CullTransparentMesh: 0
 --- !u!114 &8332231746063072133
 MonoBehaviour:
   m_ObjectHideFlags: 0

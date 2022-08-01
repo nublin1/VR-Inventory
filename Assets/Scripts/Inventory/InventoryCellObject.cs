@@ -4,11 +4,11 @@ using UnityEngine.UI;
 
 namespace Inventory
 {
-    public class InventoryCellObject
+    public class InventoryCellObject : MonoBehaviour
     {
         private GridXY _grid;
-        private readonly int x;
-        private readonly int y;
+        private int x;
+        private int y;
         private Transform spawnPoint;
         private Transform frameText;
         private Transform borderImage;
@@ -19,11 +19,12 @@ namespace Inventory
         private Vector3 originalScale = Vector3.zero;
 
         public GridXY Grid { get => _grid; }
-        public Transform SpawnPoint { get => spawnPoint; set => spawnPoint = value; }
-        public Transform FrameText { get => frameText; set => frameText = value; }
-        public Transform BorderImage { get => borderImage; set => borderImage = value; }
+        public Vector2Int CellCoord { get => new Vector2Int(x, y); }
+        public Transform SpawnPoint { get => spawnPoint;  }
+        public Transform FrameText { get => frameText;  }
+        public Transform BorderImage { get => borderImage;  }
 
-        public InventoryCellObject(GridXY grid, int _x, int _y, Transform cell)
+        public void InitInventoryCellObject(GridXY grid, int _x, int _y, Transform cell)
         {
             _grid = grid;
             x = _x;
@@ -32,17 +33,16 @@ namespace Inventory
             this.spawnPoint = cell.transform.Find("Cell3D/SpawnPoint");
             frameText = cell.transform.Find("Cell2D/FrameText");
             borderImage = cell.transform.Find("Cell2D/BorderImage");
-        }
-
-        public void FixedUpdate()
-        {
-            if (borderImage.gameObject.activeSelf == true)
-                borderImage.gameObject.SetActive(false);
-        }
+        }        
 
         public void CellIntersected()
         {
             borderImage.gameObject.SetActive(true);
+        }
+
+        public void StopIntersected()
+        {
+            borderImage.gameObject.SetActive(false);
         }
 
         public void PlaceVisual(Transform _visual)
@@ -77,7 +77,8 @@ namespace Inventory
             }
 
             // set Text
-            frameText.GetComponent<Text>().text = visual.name;            
+            frameText.GetComponent<Text>().text = visual.name;           
+            frameText.GetComponent<Text>().fontSize = 12 + Mathf.RoundToInt(_grid.CellSize / 11); 
             frameText.gameObject.SetActive(true);
         }
         public Transform GetVisual()

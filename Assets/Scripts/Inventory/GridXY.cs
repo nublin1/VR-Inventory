@@ -1,6 +1,5 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+
 using UnityEngine;
 
 namespace Inventory
@@ -8,11 +7,11 @@ namespace Inventory
     public class GridXY 
     {       
         public event EventHandler<OnInventoryCellIntersectedEventArgs> OnInventoryCellIntersected;
-        
+        public event EventHandler<OnInventoryCellIntersectedEventArgs> OnStopInventoryCellIntersected;
 
-        private int _width;
-        private int _height;
-        private float _cellSize = 1;
+        private readonly int _width;
+        private readonly int _height;
+        private readonly float _cellSize = 1;
         private Vector3 _originalPosition = Vector3.zero;
         private InventoryCellObject[,] gridArray;
 
@@ -22,21 +21,17 @@ namespace Inventory
         // Internal variables
         Vector3 cellBoundSize = new Vector3(0.1f, 0.1f, 0.1f);
 
-        public int Width { get => _width; }
-        public int Height { get => _height; }     
-        public float CellSize { get => _cellSize; }
+        public int Width        { get => _width; }
+        public int Height       { get => _height; }     
+        public float CellSize   { get => _cellSize; }
         public Vector3 OriginalPosition         { get => _originalPosition; set => _originalPosition = value;  }
         public InventoryCellObject[,] GridArray { get => gridArray; }
         public Shader CellGhostVisibleShader    { get => cellGhostVisibleShader;  }
         public Shader ItemInCellShader          { get => itemInCellShader;}
-        public Vector3 CellLossyScale            { get => cellBoundSize; set => cellBoundSize = value; }
-
-        //public int Width { get => _width; }
-        //public int Height { get => _height; }
-
+        public Vector3 CellLossyScale            { get => cellBoundSize; set => cellBoundSize = value; }        
 
         public GridXY(int width, int height, float cellSize, Vector3 originalPosition, Shader cellGhostVisibleShader, Shader itemInCellShader,
-            GameObject[,] cellArrayUI, Func<GridXY, int, int, Transform, InventoryCellObject> createGridCellObject)
+            GameObject[,] cellArrayUI)
         {
             
             _width = width;
@@ -52,15 +47,14 @@ namespace Inventory
             for (int x = 0; x < gridArray.GetLength(0); x++)
             {
                 for (int y = 0; y < gridArray.GetLength(1); y++)
-                {
-                    gridArray[x, y] = createGridCellObject(this, x, y, cellArrayUI[x, y].transform);
+                {      
+                    cellArrayUI[x, y].AddComponent<InventoryCellObject>().InitInventoryCellObject(this, x, y, cellArrayUI[x, y].transform);
+                    gridArray[x, y] = cellArrayUI[x, y].GetComponent<InventoryCellObject>();                    
                 }
             }
 
             this.itemInCellShader = itemInCellShader;
         }
-
-
 
         public Vector3 GetWorldPosition(int x, int y)
         {
@@ -84,13 +78,18 @@ namespace Inventory
             }
             else
             {
-                return default(InventoryCellObject);
+                return default;
             }
         }
         
-        public void TriggerCellIntersected(InventoryCellObject inventoryCell, Transform ghostObject)
+        public void Trigger_CellIntersected(InventoryCellObject inventoryCell, Transform ghostObject)
         {
             OnInventoryCellIntersected?.Invoke(this, new OnInventoryCellIntersectedEventArgs { cellObject = inventoryCell, ghostObject = ghostObject });
+        }
+
+        public void Trigger_StopCellIntersected(InventoryCellObject inventoryCell)
+        {
+            OnStopInventoryCellIntersected?.Invoke(this, new OnInventoryCellIntersectedEventArgs { cellObject = inventoryCell, ghostObject = null });
         }
     }
 }

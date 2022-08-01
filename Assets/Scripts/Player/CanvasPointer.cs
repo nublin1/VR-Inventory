@@ -1,7 +1,5 @@
-
 using Inventory;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.XR.Interaction.Toolkit;
 
@@ -17,15 +15,9 @@ public class CanvasPointer : MonoBehaviour
     [SerializeField] Material defaultEmptyMaterial;
     [SerializeField] Material defaultTargetedMaterial;
 
-    [Header("Events")]
-    public UnityEvent StartPoint;
-    public UnityEvent StopPoint;
-
-
     // Internal variables      
     RaycastResult raycastResult;
-
-    GameObject lastHoveringObject;
+    RaycastResult lastRaycastResult;
     private bool hover = false;
 
     void Start()
@@ -33,37 +25,39 @@ public class CanvasPointer : MonoBehaviour
         if (lineRenderer == null)
             gameObject.TryGetComponent<LineRenderer>(out lineRenderer);
         if (xRRayInteractor == null)
-            gameObject.TryGetComponent<XRRayInteractor>(out xRRayInteractor);        
+            gameObject.TryGetComponent<XRRayInteractor>(out xRRayInteractor);
+
+        if (defaultEmptyMaterial == null)
+            Resources.Load<Material>("Assets/Materials/Line/AHRed.mat");
+        if (defaultEmptyMaterial == null)
+            Resources.Load<Material>("Assets/Materials/Line/AHPointer 2.mat");
     }
 
 
     void Update()
     {
-        xRRayInteractor.TryGetCurrentUIRaycastResult(out raycastResult);        
+        xRRayInteractor.TryGetCurrentUIRaycastResult(out raycastResult);
 
-        if (raycastResult.gameObject == null)
-        {
+        if (raycastResult.gameObject == null || Vector3.Dot(transform.forward, raycastResult.worldNormal) > 0)
             StopHoveringUI();
-            StopPoint?.Invoke();
-            hover = false;
-            lastHoveringObject = raycastResult.gameObject;
-            return;
-        }
-
-        else 
-        {
-            
+        else
             StartHoveringUI();
-            StartPoint?.Invoke();
-            hover = true;
-        }        
 
         if (hover)
         {
             Hovering();
-        }
 
-        lastHoveringObject = raycastResult.gameObject;
+            if (lastRaycastResult.gameObject == null)
+            {
+                lastRaycastResult = raycastResult;
+                return;
+            }
+
+            if (lastRaycastResult.gameObject.GetInstanceID() != raycastResult.gameObject.GetInstanceID())            
+                StopHovering();
+
+            lastRaycastResult = raycastResult;
+        }
     }
 
     private void StartHoveringUI()
@@ -71,6 +65,8 @@ public class CanvasPointer : MonoBehaviour
         lineRenderer.positionCount = 2;
         lineRenderer.SetPositions(new Vector3[] { transform.position, raycastResult.worldPosition });
         lineRenderer.material = defaultTargetedMaterial;
+
+        hover = true;
     }
 
     void StopHoveringUI()
@@ -81,15 +77,28 @@ public class CanvasPointer : MonoBehaviour
             lineRenderer.SetPositions(new Vector3[0]);
         }
         lineRenderer.material = defaultEmptyMaterial;
+
+        hover = false;
+        StopHovering();
+        lastRaycastResult = raycastResult;
     }
 
     void Hovering()
     {
-        if (raycastResult.gameObject.tag == "Inventory")
+        if (raycastResult.gameObject.CompareTag("Inventory"))
         {
             raycastResult.gameObject.GetComponentInParent<InventorySystem>().InventoryIntersected(
-                raycastResult.worldPosition,
-                transform.GetComponentInParent<Input.Hand>());            
+                raycastResult.gameObject.GetComponentInParent<InventoryCellObject>().CellCoord,
+                transform.GetComponentInParent<Input.Hand>());
+        }
+    }
+
+    void StopHovering()
+    {
+        if (lastRaycastResult.gameObject != null && lastRaycastResult.gameObject.CompareTag("Inventory"))
+        {
+            lastRaycastResult.gameObject.GetComponentInParent<InventorySystem>().StopIntersected(
+               lastRaycastResult.gameObject.GetComponentInParent<InventoryCellObject>().CellCoord);
         }
     }
 }

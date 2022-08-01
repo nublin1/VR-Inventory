@@ -20,7 +20,6 @@ namespace Input
         public XRDirectInteractor XRDirectInteractor { get => xRDirectInteractor; }
         public Transform ObjectInHand { get => objectInHand; }
         public Transform LastObjectInHand { get => lastobjectInHand; set => objectInHand = value; }
-
         public XRInteractionManager XRInteractionManager { get => xRInteractionManager; }
 
         private void Start()
@@ -31,15 +30,13 @@ namespace Input
                 gameObject.GetComponentInChildren<XRRayInteractor>();
 
             xRInteractionManager = GameObject.Find("XR Interaction Manager").GetComponent<XRInteractionManager>();
-
         }
 
         private void Update()
         {
             UpdateObjectsInHand();
 
-            xRRayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit raycastHit);
-            
+            xRRayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit raycastHit);            
         }
 
         public void UpdateObjectsInHand()
