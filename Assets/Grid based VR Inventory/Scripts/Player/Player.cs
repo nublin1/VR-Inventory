@@ -112,6 +112,9 @@ public class Player : MonoBehaviour
 
     protected virtual void UpdateTurn(float deltaTime)
     {
+        if (r_hand.GetComponent<Hand>().ObjectInHand != null)
+            return;
+
         Vector2 turnVector = turnAction.action.ReadValue<Vector2>();
 
         if (snapTurning)

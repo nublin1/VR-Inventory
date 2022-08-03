@@ -16,6 +16,7 @@ namespace Inventory
         {
             // If true, the objects are scaled uniformly. If false, scale is per-component
             bool preserveDimensions = true;
+           
 
             MeshRenderer[] meshRen = obj.GetComponentsInChildren<MeshRenderer>();
             List<Bounds> bounds = new List<Bounds>();
@@ -23,8 +24,8 @@ namespace Inventory
                 bounds.Add(mr.bounds);
 
             Bounds maxBound = FindMaxBound(bounds);
+            Vector3 obj_size = maxBound.max - maxBound.min;          
 
-            Vector3 obj_size = maxBound.max - maxBound.min;
             if (preserveDimensions)
             {
                 obj.transform.localScale = obj.transform.localScale * (ComponentMax(cellBoundSize) / ComponentMax(obj_size)) * 0.92f;

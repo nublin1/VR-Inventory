@@ -1,6 +1,7 @@
 using NaughtyAttributes;
 using System;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR.Interaction.Toolkit;
@@ -18,15 +19,18 @@ namespace Inventory
         [Header("Inventory settings")]
         [SerializeField] private int gridWidth = 6;
         [SerializeField] private int gridHeight = 4;
-        [SerializeField] private float cellSize;
+        [SerializeField] private float cellSize = 100f;
         [Tooltip("Number of cells")]
         [SerializeField] private int panelHeight;
-        
+
         [Header("Items inside at the starting")]
         [SerializeField] private List<Transform> startingItems = new List<Transform>();
 
         [Header("Inventory Prefabs")]
+        [SerializeField] private bool setupPrefabs;
+        [EnableIf("setupPrefabs")]
         [SerializeField] private GameObject panelPefab;
+        [EnableIf("setupPrefabs")]
         [SerializeField] private GameObject cellPrefab;
 
         [Header("Shaders used")]
@@ -38,7 +42,7 @@ namespace Inventory
 
         // Internal variables
         Vector3 halfCellSize;
-        private static readonly float scaleFactor = 1000f;  
+        private static readonly float scaleFactor = 1000f;
 
         private GameObject[,] cellsArray;
         private GridXY grid;
@@ -59,7 +63,7 @@ namespace Inventory
             };
 
             ghostItem = new GameObject("GhostItem");
-            ghostItem.transform.parent = transform.parent;
+            ghostItem.transform.parent = transform;
             ghostItem.AddComponent<GhostItem>();
             ghostItem.GetComponent<GhostItem>().Grid = grid;
 
@@ -71,18 +75,24 @@ namespace Inventory
 
         private void Update()
         {
-            grid.OriginalPosition = cellsArray[0, 0].transform.position - halfCellSize;            
+            grid.OriginalPosition = cellsArray[0, 0].transform.position - halfCellSize;
         }
 
         void Initialized()
         {
+            if (panelHeight > gridHeight)
+                panelHeight = gridHeight;
+
+            Vector2 cellsAreaSize = new Vector2(cellSize * gridWidth, cellSize * gridHeight);
+            Vector2 viewportSize = new Vector2(cellsAreaSize.x, cellSize * panelHeight);
+
             // root of inventory gui
             GameObject invPanel = Instantiate(panelPefab);
             invPanel.transform.name = panelPefab.name;
             invPanel.transform.SetParent(transform, true);
             invPanel.transform.localPosition = new Vector3(0, 0, 0);
             invPanel.transform.localRotation = Quaternion.identity;
-            invPanel.transform.localScale = new Vector3(1f / scaleFactor, 1f / scaleFactor, 1f / scaleFactor);   
+            invPanel.transform.localScale = new Vector3(1f / scaleFactor, 1f / scaleFactor, 1f / scaleFactor);
 
             // contains array of cells
             Transform cellsContainer = invPanel.transform.Find("CellsArea/Viewport/cellsContainer");
@@ -94,34 +104,35 @@ namespace Inventory
             cellsContainer.GetComponent<GridLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
 
             Transform CellsArea = invPanel.transform.Find("CellsArea");
-            Vector2 cellsAreaSize = new Vector2(cellSize * gridWidth, cellSize * gridHeight);
             cellsContainer.GetComponent<RectTransform>().sizeDelta = cellsAreaSize;
             CellsArea.GetComponent<RectTransform>().sizeDelta = cellsAreaSize;
 
             // quad that blocking visibility
             Transform viewport = invPanel.transform.Find("CellsArea/Viewport");
-            Vector2 viewportSize = new Vector2(cellsAreaSize.x, cellSize * panelHeight);
             viewport.GetComponent<RectTransform>().sizeDelta = viewportSize;
             invPanel.GetComponent<RectTransform>().sizeDelta = viewportSize + new Vector2(viewportSize.x / 100 * 5, 0);
 
+            Vector2 panelSize = invPanel.GetComponent<RectTransform>().GetComponent<RectTransform>().sizeDelta;
+            Vector3 scrollbarPos = new Vector3((panelSize.x - viewportSize.x) / 2 * -1, 0, -0.01f);
+
             Transform Scrollbar = invPanel.transform.Find("Scrollbar");
-            Vector3 pos = invPanel.GetComponent<RectTransform>().GetComponent<RectTransform>().localPosition;
-            pos.x = invPanel.GetComponent<RectTransform>().sizeDelta.x / 2 - 10f;
-            pos.z = -0.01f;
-            Scrollbar.transform.localPosition = pos;
+            //pos.x = invPanel.GetComponent<RectTransform>().sizeDelta.x / 2 - 10f;            
+            Scrollbar.GetComponent<RectTransform>().anchoredPosition = scrollbarPos;
             Scrollbar.GetComponent<RectTransform>().sizeDelta = new Vector2(50, invPanel.GetComponent<RectTransform>().sizeDelta.y * 2);
             Scrollbar.GetComponent<Scrollbar>().value = 1;
+            
 
             // outer frame
             Transform frameMask = invPanel.transform.Find("FrameMask");
             frameMask.GetComponent<RectTransform>().sizeDelta = invPanel.GetComponent<RectTransform>().sizeDelta;
-            
-            Vector2 headerSize = new Vector2(frameMask.GetComponent<RectTransform>().sizeDelta.x, 250);
+
+            Vector2 headerSize = new Vector2(frameMask.GetComponent<RectTransform>().sizeDelta.x, 200);
             Transform invHeader = invPanel.transform.Find("Header");
-            invHeader.localPosition = new Vector2(0, invPanel.GetComponent<RectTransform>().sizeDelta.y / 2 + 25);
+            invHeader.localPosition = new Vector2(0, invPanel.GetComponent<RectTransform>().sizeDelta.y / 2 + 20);
+            invHeader.GetComponent<RectTransform>().sizeDelta = headerSize;
             invHeader.transform.Find("Image").GetComponent<RectTransform>().sizeDelta = headerSize;
             invHeader.transform.Find("Text").localScale = new Vector3(1f, invPanel.transform.Find("Header/Text").localScale.y, 1f);
-            invHeader.transform.Find("Text").GetComponent<RectTransform>().sizeDelta = new Vector2(headerSize.x * 0.90f, headerSize.y);            
+            invHeader.transform.Find("Text").GetComponent<RectTransform>().sizeDelta = new Vector2(headerSize.x * 0.90f, headerSize.y);
 
             // generate cells
             for (int x = 0; x < gridWidth; x++)
@@ -135,12 +146,25 @@ namespace Inventory
                     cellVisual.transform.localRotation = Quaternion.identity;
                     cellVisual.transform.localScale = new Vector3(1f, 1f, 1f);
 
-                    cellVisual.transform.Find("Cell2D/CellFrame").GetComponent<RectTransform>().sizeDelta = new Vector2(cellSize, cellSize);
-                    cellVisual.transform.Find("Cell2D/FrameText").GetComponent<RectTransform>().localPosition = new Vector2(0, cellSize / 2 - cellSize / 10);
-                    cellVisual.transform.Find("Cell2D/BorderImage").GetComponent<RectTransform>().sizeDelta = new Vector2(cellSize, cellSize);
+                    Transform cell2D = cellVisual.transform.Find("Cell2D");
+                    Vector2 sizeOfCell = new Vector2(cellSize, cellSize);
+                    cell2D.GetComponent<RectTransform>().sizeDelta = sizeOfCell;
+                    cell2D.Find("CellFrame").GetComponent<RectTransform>().sizeDelta = sizeOfCell;
+                    cell2D.Find("FrameText").GetComponent<RectTransform>().anchoredPosition = new Vector2(0, 0);
+                    cell2D.Find("FrameText").GetComponent<RectTransform>().sizeDelta= new Vector2(sizeOfCell.x, sizeOfCell.y / 5);
+                    cell2D.Find("FrameText").GetComponent<TextMeshProUGUI>().enableAutoSizing = true;
+                    cell2D.Find("FrameText").gameObject.SetActive(false);
+                    cell2D.Find("BorderImage").GetComponent<RectTransform>().sizeDelta = sizeOfCell;
+                    cell2D.Find("CounterField").GetComponent<RectTransform>().anchoredPosition = new Vector2(-3.5f, 0);
 
-                    cellVisual.transform.Find("Cell3D").transform.localScale = new Vector3(cellSize - 0.01f, cellSize - 0.01f, cellSize - 0.01f);
-                    cellVisual.transform.Find("Cell3D").transform.localPosition = new Vector3(0, 0, cellSize / 2);
+                    Vector2 SizeOfCounterField = new Vector2(sizeOfCell.x / 3f, sizeOfCell.y / 4);
+                    cell2D.Find("CounterField/CountBackground").GetComponent<RectTransform>().sizeDelta = SizeOfCounterField;
+                    cell2D.Find("CounterField/Number").GetComponent<RectTransform>().sizeDelta = SizeOfCounterField;                       
+                    cell2D.Find("CounterField/Number").GetComponent<TextMeshProUGUI>().enableAutoSizing = true;
+
+                    Transform Cell3D = cellVisual.transform.Find("Cell3D");
+                    Cell3D.transform.localScale = new Vector3(cellSize - 0.01f, cellSize - 0.01f, cellSize - 0.01f);
+                    Cell3D.transform.localPosition = new Vector3(0, 0, cellSize / 2);
                     cellsArray[x, y] = cellVisual;
                 }
             }
@@ -171,8 +195,8 @@ namespace Inventory
 
             if (hand.Controller.selectAction.action.WasReleasedThisFrame()
                 && hand.LastObjectInHand != null
-                && inventoryCell.IsCellEmpty() == true
-                )
+                && (inventoryCell.IsCellEmpty() == true
+                || inventoryCell.IsPlacedItemEqual(hand.LastObjectInHand))) // compared by name
             {
                 // take item from hand and put it to cell
                 inventoryCell.PlaceItem(hand.LastObjectInHand);
@@ -181,7 +205,7 @@ namespace Inventory
         }
 
         public void StopIntersected(Vector2Int cell)
-        {      
+        {
             if (OutOfBoundsCheck(cell) == false)
                 return;
 
@@ -210,7 +234,7 @@ namespace Inventory
             {
                 for (int y = 0; y < grid.Height; y++)
                 {
-                    canPlace = cellsArray[x, y].GetComponent<InventoryCellObject>().IsCellEmpty();
+                    canPlace = cellsArray[x, y].GetComponent<InventoryCellObject>().IsCellEmpty() || cellsArray[x, y].GetComponent<InventoryCellObject>().IsPlacedItemEqual(item);
                     if (canPlace)
                     {
                         Transform placedObj = Instantiate(item);

@@ -12,7 +12,7 @@ Shader "Stencil/InvBackground"
 		{
 			Tags { "RenderType" = "Opaque" "Queue" = "Geometry" }
 
-			//Cull off
+			Cull off
 
 			Pass
 			{

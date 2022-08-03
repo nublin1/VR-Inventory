@@ -7,7 +7,7 @@ namespace Inventory
     {
         struct ItemData
         {
-            public Transform ghostVisual;
+            public Transform ghostItem;
             public Transform ghostItemOnCell;
             public InventoryCellObject cellObject;
             public bool showGhostItem;
@@ -47,11 +47,11 @@ namespace Inventory
             {
                 if (ghostItems[i].showGhostItem == true)
                 {
-                    ghostItems[i] = UpdateVisual(ghostItems[i]);
+                    ghostItems[i] = UpdateItem(ghostItems[i]);
                 }
                 else
                 {
-                    DestroyVisual(ghostItems[i]);
+                    DestroyItem(ghostItems[i]);
                     ghostItems.RemoveAt(i);
                 }
             }
@@ -82,18 +82,19 @@ namespace Inventory
             }
         }
 
-        private ItemData UpdateVisual(ItemData data)
+        private ItemData UpdateItem(ItemData data)
         {
-            if (data.ghostVisual == null && data.cellObject.SpawnPoint.childCount == 0 && data.cellObject.IsCellEmpty())
+            if (data.ghostItem == null && data.cellObject.SpawnPoint.childCount == 0 && data.cellObject.IsCellEmpty())
             {
-                data.ghostVisual = Instantiate(data.ghostItemOnCell);
-                data.ghostVisual.transform.SetParent(data.cellObject.SpawnPoint);
-                data.ghostVisual.transform.position = data.cellObject.SpawnPoint.position;
-                data.ghostVisual.transform.localRotation = Quaternion.Euler(data.cellObject.SpawnPoint.rotation.x, 90f, data.cellObject.SpawnPoint.rotation.z);
+                data.ghostItem = Instantiate(data.ghostItemOnCell);
+                data.ghostItem.transform.SetParent(data.cellObject.SpawnPoint);
+                data.ghostItem.transform.position = data.cellObject.SpawnPoint.position;
+                data.ghostItem.localRotation = Quaternion.identity;
 
-                InventoryUtilities.SameSize(data.ghostVisual.gameObject, grid.CellLossyScale);
+                InventoryUtilities.SameSize(data.ghostItem.gameObject, grid.CellLossyScale);
+                data.ghostItem.transform.localRotation = Quaternion.Euler(data.cellObject.SpawnPoint.rotation.x, 90f, data.cellObject.SpawnPoint.rotation.z);
 
-                Renderer[] renderers = data.ghostVisual.gameObject.GetComponentsInChildren<Renderer>();
+                Renderer[] renderers = data.ghostItem.gameObject.GetComponentsInChildren<Renderer>();
                 foreach (Renderer renderer in renderers)
                 {
                     renderer.material.shader = grid.CellGhostVisibleShader;
@@ -103,10 +104,10 @@ namespace Inventory
                     renderer.material.renderQueue = grid.CellGhostVisibleShader.renderQueue - 2;
                 }
 
-                data.ghostVisual.GetComponent<Rigidbody>().isKinematic = true;
-                data.ghostVisual.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+                data.ghostItem.GetComponent<Rigidbody>().isKinematic = true;
+                data.ghostItem.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
 
-                Collider[] colliders = data.ghostVisual.gameObject.GetComponentsInChildren<Collider>();
+                Collider[] colliders = data.ghostItem.gameObject.GetComponentsInChildren<Collider>();
                 foreach (Collider collider in colliders)
                 {
                     collider.enabled = false;
@@ -118,10 +119,10 @@ namespace Inventory
             return data;
         }
 
-        private void DestroyVisual(ItemData data)
+        private void DestroyItem(ItemData data)
         {
-            if (data.ghostVisual != null)
-                GameObject.Destroy(data.ghostVisual.gameObject);
+            if (data.ghostItem != null)
+                GameObject.Destroy(data.ghostItem.gameObject);
         }
     }
 }

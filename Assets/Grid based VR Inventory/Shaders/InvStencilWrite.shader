@@ -8,7 +8,7 @@ Shader "Stencil/InvStencilWrite"
     {
         Tags { "RenderType"="Opaque" "Queue"= "Geometry-1"}
         
-        
+        blend SrcAlpha OneMinusSrcAlpha
         Zwrite off
 
         Pass

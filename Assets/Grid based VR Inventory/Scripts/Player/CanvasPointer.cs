@@ -9,9 +9,7 @@ public class CanvasPointer : MonoBehaviour
     [SerializeField] XRRayInteractor xRRayInteractor;
     [SerializeField] LineRenderer lineRenderer;
 
-    [Header("Ray settings")]
-    public float raycastLength = 8.0f;
-    [Space]
+    [Header("Ray settings")]   
     [SerializeField] Material defaultEmptyMaterial;
     [SerializeField] Material defaultTargetedMaterial;
 
