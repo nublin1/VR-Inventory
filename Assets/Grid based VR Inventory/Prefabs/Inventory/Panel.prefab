@@ -660,7 +660,7 @@ GameObject:
   - component: {fileID: 6961826088261719605}
   - component: {fileID: 2569811665993865345}
   m_Layer: 5
-  m_Name: cellsContainer
+  m_Name: CellsContainer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

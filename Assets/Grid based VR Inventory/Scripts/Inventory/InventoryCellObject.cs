@@ -12,7 +12,7 @@ namespace Inventory
         private int y;
         private Transform spawnPoint;
         private Transform frameText;
-        private Transform borderImage;
+        private Transform outlineImage;
         private Transform amountText;
 
         private List<GameObject> items = new List<GameObject>();
@@ -25,7 +25,7 @@ namespace Inventory
         public Vector2Int CellCoord { get => new Vector2Int(x, y); }
         public Transform SpawnPoint { get => spawnPoint; }
         public Transform FrameText { get => frameText; }
-        public Transform BorderImage { get => borderImage; }
+        public Transform OutlineImage { get => outlineImage; }
 
         public void InitInventoryCellObject(GridXY grid, int _x, int _y, Transform cell)
         {
@@ -35,18 +35,18 @@ namespace Inventory
 
             this.spawnPoint = cell.transform.Find("Cell3D/SpawnPoint");
             frameText = cell.transform.Find("Cell2D/FrameText");
-            borderImage = cell.transform.Find("Cell2D/BorderImage");
+            outlineImage = cell.transform.Find("Cell2D/Outline");
             amountText = cell.transform.Find("Cell2D/CounterField/Number");
         }
 
         public void CellIntersected()
         {
-            borderImage.gameObject.SetActive(true);
+            outlineImage.gameObject.SetActive(true);
         }
 
         public void StopIntersected()
         {
-            borderImage.gameObject.SetActive(false);
+            outlineImage.gameObject.SetActive(false);
         }
 
         public void PlaceItem(Transform _visual)

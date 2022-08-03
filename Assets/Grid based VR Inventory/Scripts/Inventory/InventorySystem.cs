@@ -41,26 +41,25 @@ namespace Inventory
         [SerializeField] Shader itemInCellShader;
 
         // Internal variables
+        GameObject invPanel;
         Vector3 halfCellSize;
         private static readonly float scaleFactor = 1000f;
 
-        private GameObject[,] cellsArray;
+        
         private GridXY grid;
         private GameObject ghostItem;
 
         void Awake()
         {
-            cellsArray = new GameObject[gridWidth, gridHeight];
+            
             halfCellSize = new Vector3(cellSize / 2 / scaleFactor, cellSize / 2 / scaleFactor, 0);
-            Initialized();
+            InventoryGeneration();
         }
 
         private void Start()
         {
-            grid = new GridXY(gridWidth, gridHeight, cellSize, transform.position, cellGhostVisibleShader, itemInCellShader, cellsArray)
-            {
-                CellLossyScale = cellsArray[0, 0].transform.Find("Cell3D").transform.lossyScale
-            };
+            grid = new GridXY(gridWidth, gridHeight, cellSize, transform.position, cellGhostVisibleShader, itemInCellShader, cellPrefab,
+               invPanel.transform.Find("CellsArea/Viewport/CellsContainer"));           
 
             ghostItem = new GameObject("GhostItem");
             ghostItem.transform.parent = transform;
@@ -69,16 +68,16 @@ namespace Inventory
 
             foreach (var item in startingItems)
             {
-                AddItemToInventoryManually(item);
+                grid.AddItemToInventoryManually(item);
             }
         }
 
         private void Update()
         {
-            grid.OriginalPosition = cellsArray[0, 0].transform.position - halfCellSize;
+            grid.OriginalPosition = grid.GridArray[0, 0].transform.position - halfCellSize;
         }
 
-        void Initialized()
+        void InventoryGeneration()
         {
             if (panelHeight > gridHeight)
                 panelHeight = gridHeight;
@@ -87,7 +86,7 @@ namespace Inventory
             Vector2 viewportSize = new Vector2(cellsAreaSize.x, cellSize * panelHeight);
 
             // root of inventory gui
-            GameObject invPanel = Instantiate(panelPefab);
+            invPanel = Instantiate(panelPefab);
             invPanel.transform.name = panelPefab.name;
             invPanel.transform.SetParent(transform, true);
             invPanel.transform.localPosition = new Vector3(0, 0, 0);
@@ -95,7 +94,7 @@ namespace Inventory
             invPanel.transform.localScale = new Vector3(1f / scaleFactor, 1f / scaleFactor, 1f / scaleFactor);
 
             // contains array of cells
-            Transform cellsContainer = invPanel.transform.Find("CellsArea/Viewport/cellsContainer");
+            Transform cellsContainer = invPanel.transform.Find("CellsArea/Viewport/CellsContainer");
             cellsContainer.localScale = new Vector3(1f, 1f, 1f);
             cellsContainer.GetComponent<GridLayoutGroup>().cellSize = new Vector2(cellSize, cellSize);
             cellsContainer.GetComponent<GridLayoutGroup>().spacing = Vector2.zero;
@@ -119,8 +118,7 @@ namespace Inventory
             //pos.x = invPanel.GetComponent<RectTransform>().sizeDelta.x / 2 - 10f;            
             Scrollbar.GetComponent<RectTransform>().anchoredPosition = scrollbarPos;
             Scrollbar.GetComponent<RectTransform>().sizeDelta = new Vector2(50, invPanel.GetComponent<RectTransform>().sizeDelta.y * 2);
-            Scrollbar.GetComponent<Scrollbar>().value = 1;
-            
+            Scrollbar.GetComponent<Scrollbar>().value = 1;            
 
             // outer frame
             Transform frameMask = invPanel.transform.Find("FrameMask");
@@ -134,40 +132,7 @@ namespace Inventory
             invHeader.transform.Find("Text").localScale = new Vector3(1f, invPanel.transform.Find("Header/Text").localScale.y, 1f);
             invHeader.transform.Find("Text").GetComponent<RectTransform>().sizeDelta = new Vector2(headerSize.x * 0.90f, headerSize.y);
 
-            // generate cells
-            for (int x = 0; x < gridWidth; x++)
-            {
-                for (int y = 0; y < gridHeight; y++)
-                {
-                    GameObject cellVisual = Instantiate(cellPrefab);
-                    cellVisual.transform.name = "Cell";
-                    cellVisual.transform.SetParent(cellsContainer.transform, true);
-                    cellVisual.transform.localPosition = new Vector3(0f, 0f, 0f);
-                    cellVisual.transform.localRotation = Quaternion.identity;
-                    cellVisual.transform.localScale = new Vector3(1f, 1f, 1f);
-
-                    Transform cell2D = cellVisual.transform.Find("Cell2D");
-                    Vector2 sizeOfCell = new Vector2(cellSize, cellSize);
-                    cell2D.GetComponent<RectTransform>().sizeDelta = sizeOfCell;
-                    cell2D.Find("CellFrame").GetComponent<RectTransform>().sizeDelta = sizeOfCell;
-                    cell2D.Find("FrameText").GetComponent<RectTransform>().anchoredPosition = new Vector2(0, 0);
-                    cell2D.Find("FrameText").GetComponent<RectTransform>().sizeDelta= new Vector2(sizeOfCell.x, sizeOfCell.y / 5);
-                    cell2D.Find("FrameText").GetComponent<TextMeshProUGUI>().enableAutoSizing = true;
-                    cell2D.Find("FrameText").gameObject.SetActive(false);
-                    cell2D.Find("BorderImage").GetComponent<RectTransform>().sizeDelta = sizeOfCell;
-                    cell2D.Find("CounterField").GetComponent<RectTransform>().anchoredPosition = new Vector2(-3.5f, 0);
-
-                    Vector2 SizeOfCounterField = new Vector2(sizeOfCell.x / 3f, sizeOfCell.y / 4);
-                    cell2D.Find("CounterField/CountBackground").GetComponent<RectTransform>().sizeDelta = SizeOfCounterField;
-                    cell2D.Find("CounterField/Number").GetComponent<RectTransform>().sizeDelta = SizeOfCounterField;                       
-                    cell2D.Find("CounterField/Number").GetComponent<TextMeshProUGUI>().enableAutoSizing = true;
-
-                    Transform Cell3D = cellVisual.transform.Find("Cell3D");
-                    Cell3D.transform.localScale = new Vector3(cellSize - 0.01f, cellSize - 0.01f, cellSize - 0.01f);
-                    Cell3D.transform.localPosition = new Vector3(0, 0, cellSize / 2);
-                    cellsArray[x, y] = cellVisual;
-                }
-            }
+            
         }
 
 
@@ -226,28 +191,7 @@ namespace Inventory
             return grid.GetGridObject(cell.x, cell.y);
         }
 
-        // find 1st cell where can be placed item 
-        private void AddItemToInventoryManually(Transform item)
-        {
-            bool canPlace = true;
-            for (int x = 0; x < grid.Width; x++)
-            {
-                for (int y = 0; y < grid.Height; y++)
-                {
-                    canPlace = cellsArray[x, y].GetComponent<InventoryCellObject>().IsCellEmpty() || cellsArray[x, y].GetComponent<InventoryCellObject>().IsPlacedItemEqual(item);
-                    if (canPlace)
-                    {
-                        Transform placedObj = Instantiate(item);
-                        placedObj.name = item.name;
-                        GetCellObject(new Vector2Int(x, y)).PlaceItem(placedObj);
-                        canPlace = false;
-                        return;
-                    }
-                    else if (x == grid.Width && y == grid.Height && !canPlace)
-                        Debug.Log("Inventory is full");
-                }
-            }
-        }
+        
         // Return true if cell is OutOfBounds
         private bool OutOfBoundsCheck(Vector2Int cellPos)
         {

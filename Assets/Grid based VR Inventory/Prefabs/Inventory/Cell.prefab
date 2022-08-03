@@ -44,7 +44,7 @@ GameObject:
   - component: {fileID: 6021217899673162752}
   - component: {fileID: 1104149667790958868}
   m_Layer: 0
-  m_Name: BorderImage
+  m_Name: Outline
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -219,7 +219,7 @@ MonoBehaviour:
   m_fontColor32:
     serializedVersion: 2
     rgba: 4279228732
-  m_fontColor: {r: 0.23419046, g: 0.8490566, b: 0.06007475, a: 1}
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -580,7 +580,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1507075443389662132
 RectTransform:
   m_ObjectHideFlags: 0
