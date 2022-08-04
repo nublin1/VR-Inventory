@@ -5,40 +5,39 @@ namespace Inventory
 {
     public class GhostItem : MonoBehaviour
     {
-        struct ItemData
+        struct GhostItemData
         {
             public Transform ghostItem;
-            public Transform ghostItemOnCell;
+            public Transform ghostItemPrefab;
             public InventoryCellObject cellObject;
             public bool showGhostItem;
         }
 
-        readonly List<ItemData> ghostItems = new List<ItemData>();
-
+        readonly List<GhostItemData> ghostItems = new List<GhostItemData>();
         private GridXY grid;
 
         public GridXY Grid { set => grid = value; }
 
         private void Start()
         {
-            grid.OnInventoryCellIntersected += RenderGhostItem;
-            grid.OnStopInventoryCellIntersected += StopRenderGhostItem;
+            grid.OnCellIntersected += RenderGhostItem;
+            grid.OnStopCellIntersected += StopRenderGhostItem;
         }
 
         private void OnEnable()
         {
             if (grid == null)
                 return;
-            grid.OnInventoryCellIntersected += RenderGhostItem;
-            grid.OnStopInventoryCellIntersected += StopRenderGhostItem;
+            grid.OnCellIntersected += RenderGhostItem;
+            grid.OnStopCellIntersected += StopRenderGhostItem;
         }
 
         private void OnDisable()
         {
             if (grid == null)
                 return;
-            grid.OnInventoryCellIntersected -= RenderGhostItem;
-            grid.OnStopInventoryCellIntersected -= StopRenderGhostItem;
+            grid.OnCellIntersected -= RenderGhostItem;
+            grid.OnStopCellIntersected -= StopRenderGhostItem;
         }
 
         void LateUpdate()
@@ -57,36 +56,36 @@ namespace Inventory
             }
         }
 
-        private void RenderGhostItem(object sender, OnInventoryCellIntersectedEventArgs e)
+        private void RenderGhostItem(object sender, CellIntersectedEventArgs e)
         {
-            ItemData newData = new ItemData
+            GhostItemData newData = new GhostItemData
             {
                 showGhostItem = true,
                 cellObject = e.cellObject,
-                ghostItemOnCell = e.ghostObject
+                ghostItemPrefab = e.item
             };
 
             ghostItems.Add(newData);
         }
 
-        private void StopRenderGhostItem(object sender, OnInventoryCellIntersectedEventArgs e)
+        private void StopRenderGhostItem(object sender, CellIntersectedEventArgs e)
         {
             for (int i = 0; i < ghostItems.Count; ++i)
             {
                 if (ghostItems[i].cellObject == e.cellObject)
                 {
-                    ItemData newData = ghostItems[i];
+                    GhostItemData newData = ghostItems[i];
                     newData.showGhostItem = false;
                     ghostItems[i] = newData;
                 }
             }
         }
 
-        private ItemData UpdateItem(ItemData data)
+        private GhostItemData UpdateItem(GhostItemData data)
         {
             if (data.ghostItem == null && data.cellObject.SpawnPoint.childCount == 0 && data.cellObject.IsCellEmpty())
             {
-                data.ghostItem = Instantiate(data.ghostItemOnCell);
+                data.ghostItem = Instantiate(data.ghostItemPrefab);
                 data.ghostItem.transform.SetParent(data.cellObject.SpawnPoint);
                 data.ghostItem.transform.position = data.cellObject.SpawnPoint.position;
                 data.ghostItem.localRotation = Quaternion.identity;
@@ -119,7 +118,7 @@ namespace Inventory
             return data;
         }
 
-        private void DestroyItem(ItemData data)
+        private void DestroyItem(GhostItemData data)
         {
             if (data.ghostItem != null)
                 GameObject.Destroy(data.ghostItem.gameObject);

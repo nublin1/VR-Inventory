@@ -1,19 +1,11 @@
 using NaughtyAttributes;
-using System;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR.Interaction.Toolkit;
 
 namespace Inventory
 {
-    public class OnInventoryCellIntersectedEventArgs : EventArgs
-    {
-        public InventoryCellObject cellObject;
-        public Transform ghostObject;
-    }
-
     public class InventorySystem : MonoBehaviour
     {
         [Header("Inventory settings")]
@@ -44,7 +36,6 @@ namespace Inventory
         GameObject invPanel;
         Vector3 halfCellSize;
         private static readonly float scaleFactor = 1000f;
-
         
         private GridXY grid;
         private GameObject ghostItem;
@@ -98,7 +89,7 @@ namespace Inventory
             cellsContainer.localScale = new Vector3(1f, 1f, 1f);
             cellsContainer.GetComponent<GridLayoutGroup>().cellSize = new Vector2(cellSize, cellSize);
             cellsContainer.GetComponent<GridLayoutGroup>().spacing = Vector2.zero;
-            cellsContainer.GetComponent<GridLayoutGroup>().startCorner = GridLayoutGroup.Corner.LowerLeft;
+            cellsContainer.GetComponent<GridLayoutGroup>().startCorner = GridLayoutGroup.Corner.UpperLeft;
             cellsContainer.GetComponent<GridLayoutGroup>().startAxis = GridLayoutGroup.Axis.Vertical;
             cellsContainer.GetComponent<GridLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
 
@@ -141,8 +132,8 @@ namespace Inventory
             if (OutOfBoundsCheck(cell) == false)
                 return;
 
-            InventoryCellObject inventoryCell = GetCellObject(cell); // get cell
-            inventoryCell.CellIntersected(); // Draw cell border            
+            InventoryCellObject inventoryCell = grid.GetGridObject(cell.x, cell.y); // get cell
+            inventoryCell.CellIntersected(); // Draw cell Outline            
 
             if (hand.ObjectInHand != null && inventoryCell.IsCellEmpty() == true)
             {
@@ -164,7 +155,7 @@ namespace Inventory
                 || inventoryCell.IsPlacedItemEqual(hand.LastObjectInHand))) // compared by name
             {
                 // take item from hand and put it to cell
-                inventoryCell.PlaceItem(hand.LastObjectInHand);
+                grid.PlaceItem(hand.LastObjectInHand, grid.GetGridObject( cell.x, cell.y));
                 hand.LastObjectInHand = null;
             }
         }
@@ -174,8 +165,8 @@ namespace Inventory
             if (OutOfBoundsCheck(cell) == false)
                 return;
 
-            InventoryCellObject inventoryCell = GetCellObject(cell);
-            inventoryCell.StopIntersected(); // Stop Draw cell border   
+            InventoryCellObject inventoryCell = grid.GetGridObject(cell.x, cell.y);
+            inventoryCell.StopIntersected(); // Stop Draw Outline  
 
             grid.Trigger_StopCellIntersected(inventoryCell); // Stop Draw ghost item   
         }
@@ -184,12 +175,7 @@ namespace Inventory
         {
             Vector2Int gridCoord = InventoryUtilities.CalculateInventorySlotCoordinateVR(raycastHitPoint, transform.rotation, grid);
             return gridCoord;
-        }
-
-        private InventoryCellObject GetCellObject(Vector2Int cell)
-        {
-            return grid.GetGridObject(cell.x, cell.y);
-        }
+        }       
 
         
         // Return true if cell is OutOfBounds

@@ -1,13 +1,23 @@
 using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
 namespace Inventory
-{
-    public class GridXY 
-    {       
-        public event EventHandler<OnInventoryCellIntersectedEventArgs> OnInventoryCellIntersected;
-        public event EventHandler<OnInventoryCellIntersectedEventArgs> OnStopInventoryCellIntersected;
+{    
+    public class CellIntersectedEventArgs : EventArgs
+    {
+        public InventoryCellObject cellObject;
+        public Transform item;
+    }
+
+    public class GridXY
+    {
+        public event EventHandler<CellIntersectedEventArgs> OnCellIntersected;
+        public event EventHandler<CellIntersectedEventArgs> OnStopCellIntersected;
+
+        public delegate void AddItemDelegate(Transform ghostItem, InventoryCellObject cell);
+        public event AddItemDelegate OnAddItem;
 
         private readonly int _width;
         private readonly int _height;
@@ -21,19 +31,19 @@ namespace Inventory
         // Internal variables
         Vector3 cellBoundSize = new Vector3(0.1f, 0.1f, 0.1f);
 
-        public int Width        { get => _width; }
-        public int Height       { get => _height; }     
-        public float CellSize   { get => _cellSize; }
-        public Vector3 OriginalPosition         { get => _originalPosition; set => _originalPosition = value;  }
-        public GameObject[,] GridArray          { get => gridArray; }
-        public Shader CellGhostVisibleShader    { get => cellGhostVisibleShader;  }
-        public Shader ItemInCellShader          { get => itemInCellShader;}
-        public Vector3 CellLossyScale           { get => cellBoundSize; set => cellBoundSize = value; }        
+        public int Width { get => _width; }
+        public int Height { get => _height; }
+        public float CellSize { get => _cellSize; }
+        public Vector3 OriginalPosition { get => _originalPosition; set => _originalPosition = value; }
+        public GameObject[,] GridArray { get => gridArray; }
+        public Shader CellGhostVisibleShader { get => cellGhostVisibleShader; }
+        public Shader ItemInCellShader { get => itemInCellShader; }
+        public Vector3 CellLossyScale { get => cellBoundSize; set => cellBoundSize = value; }
 
         public GridXY(int width, int height, float cellSize, Vector3 originalPosition, Shader cellGhostVisibleShader, Shader itemInCellShader,
             GameObject cellPrefab, Transform cellsContainer)
         {
-            
+
             _width = width;
             _height = height;
             _cellSize = cellSize;
@@ -82,16 +92,6 @@ namespace Inventory
             }
 
             CellLossyScale = gridArray[0, 0].transform.Find("Cell3D").transform.lossyScale;
-
-            //for (int x = 0; x < gridArray.GetLength(0); x++)
-            //{
-            //    for (int y = 0; y < gridArray.GetLength(1); y++)
-            //    {      
-            //        cellArrayUI[x, y].AddComponent<InventoryCellObject>().InitInventoryCellObject(this, x, y, cellArrayUI[x, y].transform);
-            //        gridArray[x, y] = cellArrayUI[x, y].GetComponent<InventoryCellObject>();                    
-            //    }
-            //}
-
             this.itemInCellShader = itemInCellShader;
         }
 
@@ -101,12 +101,12 @@ namespace Inventory
         }
 
         public void GetXY(Vector3 worldPosition, Quaternion rotation, out int x, out int y)
-        {   
+        {
             Vector3 localPosition = worldPosition - _originalPosition;
-            localPosition =  Quaternion.Inverse(rotation) * localPosition;            
+            localPosition = Quaternion.Inverse(rotation) * localPosition;
 
             x = Mathf.FloorToInt(localPosition.x / _cellSize);
-            y = Mathf.FloorToInt(localPosition.y / _cellSize);            
+            y = Mathf.FloorToInt(localPosition.y / _cellSize);
         }
 
         public InventoryCellObject GetGridObject(int x, int y)
@@ -121,6 +121,43 @@ namespace Inventory
             }
         }
 
+        public void PlaceItem(Transform _item, InventoryCellObject cell)
+        {
+            ItemData itemdata = new ItemData();
+            itemdata.item = _item.gameObject;
+            itemdata.originalScale = _item.transform.lossyScale;
+            itemdata.item.transform.SetParent(cell.SpawnPoint.transform);
+            itemdata.item.transform.position = cell.SpawnPoint.position;
+            itemdata.item.transform.localRotation = Quaternion.identity;
+
+            InventoryUtilities.SameSize(itemdata.item, CellLossyScale); // same with cell size           
+            itemdata.item.transform.localRotation = Quaternion.Euler(cell.SpawnPoint.rotation.x, 90f, cell.SpawnPoint.rotation.z);
+
+            // Change shaders
+            Renderer[] renderers = itemdata.item.GetComponentsInChildren<Renderer>();
+            itemdata.originalShaders = new List<Shader>();
+            foreach (Renderer renderer in renderers)
+            {
+                itemdata.originalShaders.Add(renderer.material.shader);
+                renderer.material.shader = ItemInCellShader;
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                Color color = renderer.material.color;
+                renderer.material.color = new Color(color.r, color.g, color.b, .65f);
+                renderer.material.renderQueue = CellGhostVisibleShader.renderQueue - 2;
+            }
+
+            // Item must not interact with anything
+            itemdata.item.GetComponent<Rigidbody>().isKinematic = true;
+            itemdata.item.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+            Collider[] colliders = itemdata.item.GetComponentsInChildren<Collider>();
+            foreach (Collider collider in colliders)
+            {
+                collider.enabled = false;
+            }
+
+            cell.StoreItem(itemdata);
+        }
+
         // find 1st cell where can be placed item 
         public void AddItemToInventoryManually(Transform item)
         {
@@ -129,12 +166,12 @@ namespace Inventory
             {
                 for (int y = 0; y < _height; y++)
                 {
-                    canPlace = GetGridObject(x,y).IsCellEmpty() || GetGridObject(x, y).IsPlacedItemEqual(item);
+                    canPlace = GetGridObject(x, y).IsCellEmpty() || GetGridObject(x, y).IsPlacedItemEqual(item);
                     if (canPlace)
                     {
                         Transform placedObj = GameObject.Instantiate(item);
                         placedObj.name = item.name;
-                        GetGridObject(x, y).PlaceItem(placedObj);
+                        PlaceItem(placedObj, GetGridObject(x, y));
                         canPlace = false;
                         return;
                     }
@@ -146,12 +183,12 @@ namespace Inventory
 
         public void Trigger_CellIntersected(InventoryCellObject inventoryCell, Transform ghostObject)
         {
-            OnInventoryCellIntersected?.Invoke(this, new OnInventoryCellIntersectedEventArgs { cellObject = inventoryCell, ghostObject = ghostObject });
+            OnCellIntersected?.Invoke(this, new CellIntersectedEventArgs { cellObject = inventoryCell, item = ghostObject });
         }
 
         public void Trigger_StopCellIntersected(InventoryCellObject inventoryCell)
         {
-            OnStopInventoryCellIntersected?.Invoke(this, new OnInventoryCellIntersectedEventArgs { cellObject = inventoryCell, ghostObject = null });
+            OnStopCellIntersected?.Invoke(this, new CellIntersectedEventArgs { cellObject = inventoryCell, item = null });
         }
     }
 }
