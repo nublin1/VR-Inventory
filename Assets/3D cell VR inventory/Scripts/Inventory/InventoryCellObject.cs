@@ -32,15 +32,10 @@ namespace Inventory
             amountText = cell.transform.Find("Cell2D/CounterField/Number");
         }
 
-        public void CellIntersected()
+        public void CellOutlineSetActive(bool isActive)
         {
-            outlineImage.gameObject.SetActive(true);
-        }
-
-        public void StopIntersected()
-        {
-            outlineImage.gameObject.SetActive(false);
-        }
+            outlineImage.gameObject.SetActive(isActive);
+        }       
 
         public void StoreItem(ItemData data)
         {
@@ -59,35 +54,15 @@ namespace Inventory
             }
         }
 
-        public Transform GetItem()
+        public ItemData GetStoredItem()
         {
-            GameObject item = items[items.Count - 1].item;
-            // Back all shaders
-            Renderer[] renderers = item.GetComponentsInChildren<Renderer>();
-            int i = 0;
-            foreach (Renderer renderer in renderers)
-            {
-                renderer.material.shader = items[items.Count - 1].originalShaders[i];
-                i++;
-            }
+            ItemData itemdata = new ItemData();
+            itemdata = items[items.Count - 1];  
 
-            item.transform.parent = null;
-            item.transform.localScale = items[items.Count - 1].originalScale;
-
-            item.GetComponent<Rigidbody>().isKinematic = false;
-            item.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-            Collider[] colliders = item.GetComponentsInChildren<Collider>();
-            foreach (Collider collider in colliders)
-            {
-                collider.enabled = true;
-            }
-
-            item.SetActive(true);
-
-            // Editing amount            
-            amountText.GetComponent<TextMeshProUGUI>().text = items.Count.ToString();
+            // Editing amount      
             items.RemoveAt(items.Count - 1);
-            return item.transform;
+            amountText.GetComponent<TextMeshProUGUI>().text = items.Count.ToString();
+            return itemdata;
         }
 
         public void ClearCell()

@@ -13,7 +13,7 @@ namespace Inventory
         [SerializeField] private int gridHeight = 4;
         [SerializeField] private float cellSize = 100f;
         [Tooltip("Number of cells")]
-        [SerializeField] private int panelHeight;
+        [SerializeField] private int viewportHeight;
         [SerializeField] private AxisDirections DefaultDirectionAxis;       
 
         [Header("Items inside at the starting")]
@@ -81,11 +81,11 @@ namespace Inventory
 
             halfCellSize = new Vector3(cellSize / 2 / scaleFactor, cellSize / 2 / scaleFactor, 0);
 
-            if (panelHeight > gridHeight)
-                panelHeight = gridHeight;
+            if (viewportHeight > gridHeight)
+                viewportHeight = gridHeight;
 
             Vector2 cellsAreaSize = new Vector2(cellSize * gridWidth, cellSize * gridHeight);
-            Vector2 viewportSize = new Vector2(cellsAreaSize.x, cellSize * panelHeight);
+            Vector2 viewportSize = new Vector2(cellsAreaSize.x, cellSize * viewportHeight);
 
             // root of inventory gui
             invPanel = Instantiate(panelPrefab);
@@ -143,14 +143,13 @@ namespace Inventory
                invPanel.transform.Find("CellsArea/Viewport/CellsContainer"));
         } 
 
-
         public void InventoryIntersected(Vector2Int cell, Input.Hand hand)
         {
             if (OutOfBoundsCheck(cell) == false)
                 return;
 
             InventoryCellObject inventoryCell = grid.GetGridObject(cell.x, cell.y); // get cell
-            inventoryCell.CellIntersected(); // Draw cell Outline            
+            inventoryCell.CellOutlineSetActive(true); // Draw cell Outline            
 
             if (hand.ObjectInHand != null && inventoryCell.IsCellEmpty() == true)
             {
@@ -161,7 +160,7 @@ namespace Inventory
                 if (hand.Controller.selectAction.action.IsPressed())
                 {
                     // take item from cell anf put it to hand
-                    hand.XRInteractionManager.SelectEnter(hand.XRRayInteractor, inventoryCell.GetItem().GetComponent<IXRSelectInteractable>());
+                    hand.XRInteractionManager.SelectEnter(hand.XRRayInteractor, grid.GetPlacedItem(inventoryCell).GetComponent<IXRSelectInteractable>());
                     inventoryCell.ClearCell();
                 }
             }
@@ -183,7 +182,7 @@ namespace Inventory
                 return;
 
             InventoryCellObject inventoryCell = grid.GetGridObject(cell.x, cell.y);
-            inventoryCell.StopIntersected(); // Stop Draw Outline  
+            inventoryCell.CellOutlineSetActive(false); // Stop Draw Outline  
 
             grid.Trigger_StopCellIntersected(inventoryCell); // Stop Draw ghost item   
         }

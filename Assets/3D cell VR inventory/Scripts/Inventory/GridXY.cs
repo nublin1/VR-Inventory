@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine;
 
 namespace Inventory
-{    
+{
     public class CellIntersectedEventArgs : EventArgs
     {
         public InventoryCellObject cellObject;
@@ -138,9 +138,12 @@ namespace Inventory
             Renderer[] renderers = itemdata.item.GetComponentsInChildren<Renderer>();
             itemdata.originalShaders = new List<Shader>();
             foreach (Renderer renderer in renderers)
-            {
-                itemdata.originalShaders.Add(renderer.material.shader);
-                renderer.material.shader = ItemInCellShader;
+            {                
+                foreach (Material material in renderer.materials)
+                {
+                    itemdata.originalShaders.Add(material.shader);
+                    material.shader = ItemInCellShader;
+                }
                 renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 Color color = renderer.material.color;
                 renderer.material.color = new Color(color.r, color.g, color.b, .65f);
@@ -157,6 +160,37 @@ namespace Inventory
             }
 
             cell.StoreItem(itemdata);
+        }
+
+        public GameObject GetPlacedItem(InventoryCellObject cellObject)
+        {
+            ItemData itemData = cellObject.GetStoredItem();
+            // Back all shaders
+            Renderer[] renderers = itemData.item.GetComponentsInChildren<Renderer>();
+            int i = 0;
+            foreach (Renderer renderer in renderers)
+            {
+                foreach (Material material in renderer.materials)
+                {
+                    material.shader = itemData.originalShaders[i];
+                    i++;
+                }
+            }
+
+            itemData.item.transform.parent = null;
+            itemData.item.transform.localScale = itemData.originalScale;
+
+            itemData.item.GetComponent<Rigidbody>().isKinematic = false;
+            itemData.item.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            Collider[] colliders = itemData.item.GetComponentsInChildren<Collider>();
+            foreach (Collider collider in colliders)
+            {
+                collider.enabled = true;
+            }
+
+            itemData.item.SetActive(true);
+            
+            return itemData.item;
         }
 
         // find 1st cell where can be placed item 
