@@ -67,17 +67,7 @@ namespace Inventory
         [Button("Generate inventory")]
         private void InventoryGeneration()
         {
-            // Delete all cells that already exits
-            for (int i = 0; i < transform.childCount; i++)
-            {
-                DestroyImmediate(transform.GetChild(i).gameObject);
-            }
-            
-            if (panelPrefab == null || cellPrefab == null)
-            {
-                Debug.LogError("One of the prefabs is empty");
-                return;
-            }
+            ClearExitedCells();
 
             halfCellSize = new Vector3(cellSize / 2 / scaleFactor, cellSize / 2 / scaleFactor, 0);
 
@@ -87,7 +77,7 @@ namespace Inventory
             Vector2 cellsAreaSize = new Vector2(cellSize * gridWidth, cellSize * gridHeight);
             Vector2 viewportSize = new Vector2(cellsAreaSize.x, cellSize * viewportHeight);
 
-            // root of inventory gui
+            // Root of inventory gui
             invPanel = Instantiate(panelPrefab);
             invPanel.transform.name = panelPrefab.name;
             invPanel.transform.SetParent(transform, true);
@@ -95,7 +85,7 @@ namespace Inventory
             invPanel.transform.localRotation = Quaternion.identity;
             invPanel.transform.localScale = new Vector3(1f / scaleFactor, 1f / scaleFactor, 1f / scaleFactor);
 
-            // contains array of cells
+            // Contains array of cells
             Transform cellsContainer = invPanel.transform.Find("CellsArea/Viewport/CellsContainer");
             cellsContainer.localScale = new Vector3(1f, 1f, 1f);
             cellsContainer.GetComponent<GridLayoutGroup>().cellSize = new Vector2(cellSize, cellSize);
@@ -108,7 +98,7 @@ namespace Inventory
             cellsContainer.GetComponent<RectTransform>().sizeDelta = cellsAreaSize;
             CellsArea.GetComponent<RectTransform>().sizeDelta = cellsAreaSize;
 
-            // quad that blocking visibility
+            // Quad that blocking visibility
             Transform viewport = invPanel.transform.Find("CellsArea/Viewport");
             viewport.GetComponent<RectTransform>().sizeDelta = viewportSize;
             invPanel.GetComponent<RectTransform>().sizeDelta = viewportSize + new Vector2(viewportSize.x / 100 * 5, 0);
@@ -122,10 +112,11 @@ namespace Inventory
             Scrollbar.GetComponent<RectTransform>().sizeDelta = new Vector2(50, invPanel.GetComponent<RectTransform>().sizeDelta.y * 2);
             Scrollbar.GetComponent<Scrollbar>().value = 1;
 
-            // outer frame
+            // Outer frame
             Transform frameMask = invPanel.transform.Find("FrameMask");
             frameMask.GetComponent<RectTransform>().sizeDelta = invPanel.GetComponent<RectTransform>().sizeDelta;
 
+            // Header
             Vector2 headerSize = new Vector2(frameMask.GetComponent<RectTransform>().sizeDelta.x, 200);
             Transform invHeader = invPanel.transform.Find("Header");
             invHeader.localPosition = new Vector2(0, invPanel.GetComponent<RectTransform>().sizeDelta.y / 2 + 20);
@@ -133,6 +124,7 @@ namespace Inventory
             invHeader.transform.Find("Image").GetComponent<RectTransform>().sizeDelta = headerSize;
             invHeader.transform.Find("Text").localScale = new Vector3(1f, invPanel.transform.Find("Header/Text").localScale.y, 1f);
             invHeader.transform.Find("Text").GetComponent<RectTransform>().sizeDelta = new Vector2(headerSize.x * 0.95f, headerSize.y / invHeader.transform.Find("Text").localScale.y);
+            invHeader.GetComponent<BoxCollider>().size = new Vector3 (headerSize.x, headerSize.y, 1);
 
             InitializationGrid();
         }
@@ -161,7 +153,7 @@ namespace Inventory
                 {
                     // take item from cell anf put it to hand
                     hand.XRInteractionManager.SelectEnter(hand.XRRayInteractor, grid.GetPlacedItem(inventoryCell).GetComponent<IXRSelectInteractable>());
-                    inventoryCell.ClearCell();
+                    inventoryCell.ClearCell();                    
                 }
             }
 
@@ -201,6 +193,21 @@ namespace Inventory
                 return false;
 
             return true;
+        }
+
+        private void ClearExitedCells()
+        {
+            // Delete all cells that already exits
+            for (int i = 0; i < transform.childCount; i++)
+            {
+                DestroyImmediate(transform.GetChild(i).gameObject);
+            }
+
+            if (panelPrefab == null || cellPrefab == null)
+            {
+                Debug.LogError("One of the prefabs is empty");
+                return;
+            }
         }
     }
 }

@@ -1,0 +1,1 @@
+Asset uses NaughtyAttributes under MIT License - https://github.com/dbrizov/NaughtyAttributes/blob/master/LICENSE

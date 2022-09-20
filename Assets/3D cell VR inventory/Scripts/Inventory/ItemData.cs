@@ -22,7 +22,6 @@ namespace Inventory
                 default: return Vector3.zero;
 
             }
-
         }
     }
 
@@ -35,6 +34,4 @@ namespace Inventory
         negative_Y,
         negative_Z,
     }
-
-
 }
